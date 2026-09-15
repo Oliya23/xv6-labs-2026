@@ -2,23 +2,46 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 #include "kernel/fs.h"
+#include "kernel/param.h"
 
 char*
 fmtname(char *path)
 {
-
   char *p;
-
-  // Find first character after last slash.
   for (p = path + strlen(path); p >= path && *p != '/'; p--)
     ;
   p++;
-
   return p;
 }
 
 void
-find(char *path, char *name)
+runexec(char **cmdargv, int cmdargc, char *file)
+{
+  int pid;
+  char *argv[MAXARG];
+  int i;
+
+  for (i = 0; i < cmdargc; i++)
+    argv[i] = cmdargv[i];
+  argv[i++] = file;
+  argv[i] = 0;
+
+  pid = fork();
+  if (pid < 0) {
+    fprintf(2, "find: fork failed\n");
+    return;
+  }
+  if (pid == 0) {
+    exec(argv[0], argv);
+    fprintf(2, "find: exec %s failed\n", argv[0]);
+    exit(1);
+  } else {
+    wait(0);
+  }
+}
+
+void
+find(char *path, char *name, char **cmdargv, int cmdargc)
 {
   char buf[512], *p;
   int fd;
@@ -39,7 +62,10 @@ find(char *path, char *name)
   switch (st.type) {
   case T_FILE:
     if (strcmp(fmtname(path), name) == 0) {
-      printf("%s\n", path);
+      if (cmdargc > 0)
+        runexec(cmdargv, cmdargc, path);
+      else
+        printf("%s\n", path);
     }
     break;
 
@@ -65,11 +91,14 @@ find(char *path, char *name)
       }
 
       if (strcmp(fmtname(buf), name) == 0) {
-        printf("%s\n", buf);
+        if (cmdargc > 0)
+          runexec(cmdargv, cmdargc, buf);
+        else
+          printf("%s\n", buf);
       }
 
       if (st.type == T_DIR) {
-        find(buf, name);
+        find(buf, name, cmdargv, cmdargc);
       }
     }
     break;
@@ -80,11 +109,16 @@ find(char *path, char *name)
 int
 main(int argc, char *argv[])
 {
-  if (argc != 3) {
-    fprintf(2, "usage: find dir name\n");
+  if (argc < 3) {
+    fprintf(2, "usage: find dir name [-exec cmd...]\n");
     exit(1);
   }
 
-  find(argv[1], argv[2]);
+  if (argc > 3 && strcmp(argv[3], "-exec") == 0) {
+    find(argv[1], argv[2], argv + 4, argc - 4);
+  } else {
+    find(argv[1], argv[2], 0, 0);
+  }
+
   exit(0);
 }
