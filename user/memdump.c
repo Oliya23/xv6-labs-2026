@@ -3,7 +3,7 @@
 #include "kernel/fcntl.h"
 
 void memdump(char *fmt, char *data, int len);
-
+     
 int
 main(int argc, char *argv[])
 {
@@ -60,6 +60,52 @@ main(int argc, char *argv[])
 void
 memdump(char *fmt, char *data, int len)
 {
-  // Your code here.  `data` holds `len` valid bytes.
+  int off = 0;
 
+  for (char *f = fmt; *f; f++) {
+    char c = *f;
+
+    if (c == 'i') {
+      if (off + 4 > len) { printf("memdump: not enough data for '%c'\n", c); return; }
+      int v;
+      memmove(&v, data + off, 4);
+      printf("%d\n", v);
+      off += 4;
+    }
+    else if (c == 'p') {
+      if (off + 8 > len) { printf("memdump: not enough data for '%c'\n", c); return; }
+      uint64 v;
+      memmove(&v, data + off, 8);
+      printf("%lx\n", v);
+      off += 8;
+    }
+    else if (c == 'h') {
+      if (off + 2 > len) { printf("memdump: not enough data for '%c'\n", c); return; }
+      short v;
+      memmove(&v, data + off, 2);
+      printf("%d\n", v);
+      off += 2;
+    }
+    else if (c == 'c') {
+      if (off + 1 > len) { printf("memdump: not enough data for '%c'\n", c); return; }
+      printf("%c\n", data[off]);
+      off += 1;
+    }
+    else if (c == 's') {
+      if (off + 8 > len) { printf("memdump: not enough data for '%c'\n", c); return; }
+      uint64 ptr;
+      memmove(&ptr, data + off, 8);
+      printf("%s\n", (char *)ptr);
+      off += 8;
+    }
+    else if (c == 'S') {
+      int i = off;
+      while (i < len && data[i] != '\0') {
+        printf("%c", data[i]);
+        i++;
+      }
+      printf("\n");
+      off = len;
+    }
+  }
 }

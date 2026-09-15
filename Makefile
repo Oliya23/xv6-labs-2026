@@ -189,6 +189,7 @@ UPROGS=\
 	$U/_grep\
         $U/_sleep\
 	$U/_sixfive\
+	$U/_memdump\
 	$U/_init\
 	$U/_kill\
 	$U/_ln\
