@@ -3,7 +3,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
-
+#include "kernel/stat.h"
 // Parsed command representation
 #define EXEC  1
 #define REDIR 2
@@ -130,11 +130,14 @@ runcmd(struct cmd *cmd)
   }
   exit(0);
 }
-
 int
 getcmd(char *buf, int nbuf)
 {
-  write(2, "$ ", 2);
+  struct stat st;
+
+  fstat(0, &st);
+  if (st.type != T_FILE)
+    write(2, "$ ", 2);
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
   if (buf[0] == 0) // EOF
