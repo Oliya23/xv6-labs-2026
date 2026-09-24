@@ -22,9 +22,11 @@ sys_interpose(void)
   char path[MAXPATH];
 
   argint(0, &mask);
-  argstr(1, path, MAXPATH);
+  if(argstr(1, path, MAXPATH) < 0)
+    return -1;
 
   myproc()->mask = mask;
+  safestrcpy(myproc()->path, path, MAXPATH);
 
   return 0;
 }

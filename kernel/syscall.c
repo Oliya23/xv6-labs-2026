@@ -7,6 +7,7 @@
 #include "syscall.h"
 #include "defs.h"
 
+
 // Fetch the uint64 at addr from the current process.
 int
 fetchaddr(uint64 addr, uint64 *ip)
@@ -144,12 +145,19 @@ syscall(void)
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     if(p->mask & (1 << num)) {
-      p->trapframe->a0 = -1;          // pretend the call failed
+      // blocked by mask — but maybe an allowed pathname saves it
+      if((num == SYS_open || num == SYS_exec) && strncmp(p->path, "-", MAXPATH) != 0){
+        char path[MAXPATH];
+        if(argstr(0, path, MAXPATH) >= 0 && strncmp(path, p->path, MAXPATH) == 0){
+          p->trapframe->a0 = syscalls[num]();
+        } else {
+          p->trapframe->a0 = -1;
+        }
+      } else {
+        p->trapframe->a0 = -1;
+      }
     } else {
       p->trapframe->a0 = syscalls[num]();
     }
-  } else {
-    printk("%d %s: unknown sys call %d\n", p->pid, p->name, num);
-    p->trapframe->a0 = -1;
-  }
+}
 }

@@ -297,6 +297,7 @@ kfork(void)
   np->parent = p;
   release(&wait_lock);
   np->mask = p->mask;
+safestrcpy(np->path, p->path, MAXPATH);
   acquire(&np->lock);
   np->state = RUNNABLE;
   release(&np->lock);
