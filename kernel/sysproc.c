@@ -15,6 +15,19 @@ sys_exit(void)
   kexit(n);
   return 0; // not reached
 }
+uint64
+sys_interpose(void)
+{
+  int mask;
+  char path[MAXPATH];
+
+  argint(0, &mask);
+  argstr(1, path, MAXPATH);
+
+  myproc()->mask = mask;
+
+  return 0;
+}
 
 uint64
 sys_getpid(void)

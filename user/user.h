@@ -4,6 +4,7 @@ struct stat;
 
 // system calls
 int fork(void);
+int interpose(int, char*);
 int exit(int) __attribute__((noreturn));
 int wait(int *);
 int pipe(int *);

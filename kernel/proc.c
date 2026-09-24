@@ -296,7 +296,7 @@ kfork(void)
   acquire(&wait_lock);
   np->parent = p;
   release(&wait_lock);
-
+  np->mask = p->mask;
   acquire(&np->lock);
   np->state = RUNNABLE;
   release(&np->lock);

@@ -25,6 +25,7 @@ entry("fork");
 entry("exit");
 entry("wait");
 entry("pipe");
+entry("interpose");
 entry("read");
 entry("write");
 entry("close");
