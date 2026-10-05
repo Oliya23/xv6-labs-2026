@@ -1,0 +1,16 @@
+Exercise 1: Inspect a user-process page table
+
+PTE permission bits: V=0x1 R=0x2 W=0x4 X=0x8 U=0x10 A=0x40 D=0x80
+pa = (pte >> 10) << 12, perm = pte & 0x3FF
+
+va 0x0     perm 0x5B (V R X U A)  Code page 1. Readable/executable by user, not writable. A is set because it has been executed.
+va 0x1000  perm 0x1B (V R X U)    Code page 2. Same as above, but A is not set because nothing has run on it yet.
+va 0x2000  perm 0x17 (V R W U)    Data page. Writable by user, not yet accessed so no A/D.
+va 0x3000  perm 0x07 (V R W)      Guard page. Valid but U is cleared, so user access faults (catches stack overflow).
+va 0x4000  perm 0xD7 (V R W U A D) User stack. Read and written, so A and D are set.
+va 0x5000-0x9000  pte 0           Invalid, unused address space.
+va 0x3FFFFF6000-0x3FFFFFD000  pte 0   Invalid (the page at 0x3FFFFFD000 is where USYSCALL is mapped in part 2).
+va 0x3FFFFFE000 perm 0xC7 (V R W A D) Trapframe. Kernel-only (no U bit), holds saved user registers on traps.
+va 0x3FFFFFF000 perm 0x4B (V R X A)   Trampoline. Kernel trap entry/exit code, no U bit, same va in every address space.
+
+Physical addresses are not consecutive because kalloc() takes pages from a free list in arbitrary order.
