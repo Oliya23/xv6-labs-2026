@@ -148,11 +148,6 @@ walkaddr(pagetable_t pagetable, uint64 va)
 
 
 #if defined(LAB_PGTBL) || defined(SOL_MMAP) || defined(SOL_COW)
-void
-vmprint(pagetable_t pagetable)
-{
-  // your code here
-}
 #endif
 
 
@@ -313,8 +308,39 @@ freewalk(pagetable_t pagetable)
       panic("freewalk: leaf");
     }
   }
-  kfree((void *)pagetable);
 }
+//
+static void
+vmprint_level(pagetable_t pt, int level, uint64 va_base)
+{
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pt[i];
+    if(!(pte & PTE_V))
+      continue;
+    uint64 va = va_base | ((uint64)i << PXSHIFT(level));
+    for(int d = 0; d < 3 - level; d++)
+      printk(" ..");
+    printk("%p: pte %p pa %p", (void*)va, (void*)pte, (void*)PTE2PA(pte));
+    if(pte & (PTE_R|PTE_W|PTE_X)){      // leaf: print permissions
+      printk(" ");
+      if(pte & PTE_R) printk("R");
+      if(pte & PTE_W) printk("W");
+      if(pte & PTE_X) printk("X");
+      if(pte & PTE_U) printk("U");
+    }
+    printk("\n");
+    if(level > 0 && (pte & (PTE_R|PTE_W|PTE_X)) == 0)
+      vmprint_level((pagetable_t)PTE2PA(pte), level - 1, va);
+  }
+}
+
+void
+vmprint(pagetable_t pagetable)
+{
+  printk("page table %p\n", pagetable);
+  vmprint_level(pagetable, 2, 0);
+}
+
 
 // Free user memory pages,
 // then free page-table pages.
