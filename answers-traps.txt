@@ -1,0 +1,16 @@
+1. RISC-V passes integer and pointer arguments in registers a0 through a7. In main's call to printf, a2 holds 13 because it is the third argument. a0 holds the format-string pointer, and a1 holds 12, the result of f(8) + 1.
+
+2. In my generated user/call.asm, main contains no call to f because the compiler constant-folds f(8) + 1 to 12. The function f also contains no call to g; the compiler optimizes/inlines the computation x + 3. The assembly for f and g is present, but their calls are optimized away in this build.
+
+3. printf is located at address 0x6fe in my user/call.asm, as shown by the call instruction at address 0x30: jal 6fe <printf>.
+
+4. The return address in ra immediately after the call to printf is 0x34, the address of the instruction following the call at 0x30.
+
+5. The output is:
+He110 World
+
+The integer 57616 is hexadecimal e110. The bytes of i = 0x00646c72 in little-endian memory order are 0x72 ('r'), 0x6c ('l'), 0x64 ('d'), and 0x00 (the null terminator), so the string is "rld".
+
+6. On a big-endian machine, set i to 0x726c6400 so its bytes in memory spell "rld" followed by the null terminator. The value 57616 does not need to change because it is printed as a hexadecimal integer, not interpreted as a string.
+
+7. The value printed after y= is not specified. The format string contains two %d conversions, but printf receives only one integer argument (3). It therefore tries to read a second integer argument that was never supplied. This is undefined behavior, so the value may be arbitrary.
