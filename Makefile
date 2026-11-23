@@ -194,6 +194,8 @@ UPROGS=\
 	$U/_grep\
 	$U/_init\
 	$U/_kill\
+        $U/_symlinktest\
+        $U/_bigfile\
 	$U/_ln\
 	$U/_ls\
 	$U/_mkdir\
